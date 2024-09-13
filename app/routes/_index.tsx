@@ -11,7 +11,6 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
-import { format } from "date-fns";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
+import { formatInTimeZone } from "date-fns-tz";
 
 interface DateResponse {
   date: string;
@@ -161,7 +161,7 @@ function CalendarEvents({
 
 function EventCard({ item }: { item: DateResponse }) {
   const date = new Date(item.date);
-  const formattedDate = format(date, "EEEE, do MMM");
+  const formattedDate = formatInTimeZone(date, "Europe/London", "EEEE, do MMM");
   const status = item.status.toUpperCase();
 
   return (
