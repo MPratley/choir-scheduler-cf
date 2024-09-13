@@ -1,6 +1,5 @@
 import ical, { ICalEventData } from 'ical-generator';
 import { parseISO } from 'date-fns/parseISO';
-import { add } from 'date-fns/add';
 
 interface EventData {
   date: string;
@@ -39,9 +38,7 @@ export function generateICalFeed(events: EventData[], name: string) {
   events.forEach((event) => {
     const [startTimeStr, endTimeStr] = event.rehearsalTime.split(/\s*[–-]\s*/);
 
-    // google sheets is returning dates an hour ahead of what we want, which is probably due to daylight saving time
-    // this means they tend to be a day off from the actual date
-    const eventDate = add(parseISO(event.date), { hours: 2 });
+    const eventDate = parseISO(event.date);
     const startTime = parseTime(startTimeStr, eventDate);
 
     if (!startTime) return; // Skip events with unparseable start times
@@ -74,6 +71,7 @@ export function generateICalFeed(events: EventData[], name: string) {
     };
 
     const eventData: ICalEventData = {
+      timezone: 'Europe/London',
       start: startTime,
       end: endTime,
       summary: `Symbel Choir - ${statusMap[event.status]} - 📍 ${event.location}`,
