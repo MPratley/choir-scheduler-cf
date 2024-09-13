@@ -1,4 +1,6 @@
 import ical, { ICalEventData } from 'ical-generator';
+import { parseISO } from 'date-fns/parseISO';
+import { add } from 'date-fns/add';
 
 interface EventData {
   date: string;
@@ -17,12 +19,17 @@ function parseTime(timeString: string, date: Date): Date | null {
   const [, hours, minutes, period] = match;
   let parsedHours = parseInt(hours);
 
-  if (period && period.toLowerCase() === 'p' && parsedHours !== 12) {
+  if (period && period[0].toLowerCase() === 'p' && parsedHours !== 12) {
     parsedHours += 12;
   }
 
   const result = new Date(date);
   result.setHours(parsedHours, parseInt(minutes), 0, 0);
+
+  // if (date.toISOString() === TEMP_TEST_DATE_STR) {
+  //   console.dir({ timeString, date, result, parsedHours, hours, minutes, period }, { depth: null });
+  // }
+
   return result;
 }
 
@@ -31,7 +38,10 @@ export function generateICalFeed(events: EventData[], name: string) {
 
   events.forEach((event) => {
     const [startTimeStr, endTimeStr] = event.rehearsalTime.split(/\s*[–-]\s*/);
-    const eventDate = new Date(event.date);
+
+    // google sheets is returning dates an hour ahead of what we want, which is probably due to daylight saving time
+    // this means they tend to be a day off from the actual date
+    const eventDate = add(parseISO(event.date), { hours: 2 });
     const startTime = parseTime(startTimeStr, eventDate);
 
     if (!startTime) return; // Skip events with unparseable start times
