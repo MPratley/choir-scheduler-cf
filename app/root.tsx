@@ -5,11 +5,23 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import type { LinksFunction } from "@remix-run/cloudflare";
+import type { LinksFunction, MetaFunction } from "@remix-run/cloudflare";
 
 import "./tailwind.css";
 
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Symbel Calendars" },
+    { name: "description", content: "Symbel Choir - Personal Calendars" },
+  ];
+};
+
 export const links: LinksFunction = () => [
+  {
+    rel: 'icon',
+    type: 'image/gif',
+    href: '/favicon.gif',
+  },
   // { rel: "preconnect", href: "https://fonts.googleapis.com" },
   // {
   //   rel: "preconnect",
