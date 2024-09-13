@@ -1,4 +1,3 @@
-import { useRef, Suspense } from "react";
 import {
   useSearchParams,
   useLoaderData,
@@ -8,6 +7,28 @@ import {
 } from "@remix-run/react";
 import { json, LoaderFunctionArgs, defer } from "@remix-run/cloudflare";
 import { fetchGoogleApiData } from "../utils/googleApi.server";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "~/components/ui/carousel";
+import { Badge } from "~/components/ui/badge";
+import { format } from "date-fns";
+import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 
 interface DateResponse {
   date: string;
@@ -51,46 +72,34 @@ export default function Index() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Check Availability</h1>
-      <Form role="search" className="mb-4">
-        <input
-          id="nameInput"
-          type="text"
-          name="name"
-          placeholder="Enter surname"
-          className="border p-2 mr-2"
-          defaultValue={name || ""}
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white p-2 rounded mr-2"
-        >
-          Search
-        </button>
-        {icalFeedUrl && (
-          <a
-            href={icalFeedUrl}
-            className="bg-green-500 text-white p-2 rounded inline-block"
-          >
-            Subscribe to this calendar
-          </a>
-        )}
+      <Form role="search" className="mb-4 flex flex-wrap gap-2">
+        <div className="flex-1 min-w-[200px] flex gap-2">
+          <Input
+            className="max-w-xs"
+            id="nameInput"
+            type="text"
+            name="name"
+            placeholder="Enter surname"
+            defaultValue={name || ""}
+          />
+          <Button type="submit">Search</Button>
+        </div>
       </Form>
 
       {searching ? (
         <p>Loading calendar events...</p>
       ) : (
-        <Suspense fallback={<p>Loading calendar events...</p>}>
-          <Await
-            resolve={dates}
-            errorElement={
-              <p>Error loading calendar events. Please try again.</p>
-            }
-          >
-            {(resolvedDates) => (
-              <CalendarEvents resolvedDates={resolvedDates} />
-            )}
-          </Await>
-        </Suspense>
+        <Await
+          resolve={dates}
+          errorElement={<p>Error loading calendar events. Please try again.</p>}
+        >
+          {(resolvedDates) => (
+            <CalendarEvents
+              resolvedDates={resolvedDates}
+              icalFeedUrl={icalFeedUrl}
+            />
+          )}
+        </Await>
       )}
     </div>
   );
@@ -98,19 +107,13 @@ export default function Index() {
 
 function CalendarEvents({
   resolvedDates,
+  icalFeedUrl,
 }: {
   resolvedDates: DateResponse[] | null;
+  icalFeedUrl: string | null;
 }) {
-  const carouselRef = useRef<HTMLDivElement>(null);
   const futureDates =
     resolvedDates?.filter((item) => new Date(item.date) > new Date()) || [];
-
-  const scrollCarousel = (direction: "left" | "right") => {
-    if (carouselRef.current) {
-      const scrollAmount = direction === "left" ? -300 : 300;
-      carouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
 
   if (resolvedDates && futureDates.length === 0) {
     return <p className="mt-4">No data available for this surname.</p>;
@@ -118,59 +121,90 @@ function CalendarEvents({
 
   return (
     <>
-      {futureDates.length > 0 ? (
+      {futureDates.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Availability:</h2>
-          <div
-            ref={carouselRef}
-            className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide"
-            style={{ scrollSnapType: "x mandatory" }}
-          >
-            {futureDates.map((item) => (
-              <div
-                key={item.date}
-                className="flex-shrink-0 w-64 bg-white rounded-lg shadow-md p-4"
-                style={{ scrollSnapAlign: "start" }}
-              >
-                <p className="font-semibold text-lg mb-2">
-                  {new Date(item.date).toLocaleDateString()}
-                </p>
-                <p className="text-sm mb-1">Rehearsal: {item.rehearsalTime}</p>
-                {item.serviceTime && (
-                  <p className="text-sm mb-1">Service: {item.serviceTime}</p>
-                )}
-                {item.location && (
-                  <p className="text-sm mb-1">Location: {item.location}</p>
-                )}
-                <p className="text-sm font-medium mt-2">
-                  Status:{" "}
-                  <span
-                    className={`${
-                      item.status === "Y"
-                        ? "text-green-500"
-                        : item.status === "N"
-                          ? "text-red-500"
-                          : "text-yellow-500"
-                    }`}
-                  >
-                    {item.status === "Y"
-                      ? "Going"
-                      : item.status === "N"
-                        ? "Not Going"
-                        : "Unsure"}
-                  </span>
-                </p>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => scrollCarousel("right")}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-10"
-          >
-            &#8594;
-          </button>
+          <h2 className="text-xl font-semibold mb-2">Availability:</h2>
+          {icalFeedUrl && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="mb-4">Add to your calendar app 📆</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Add to your calendar app 📆
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will add your choir sign-ups to the calendar app on
+                    your phone or laptop. <br /><br /> It&apos;ll update itself each time
+                    changes are made by you or Anthony on the google sheet, so
+                    you only need to do this once!
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>
+                    Ah, I&apos;ve already done this
+                  </AlertDialogCancel>
+                  <AlertDialogAction>
+                    <a href={icalFeedUrl}>Sounds good! 📆</a>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          <Carousel opts={{}} plugins={[WheelGesturesPlugin()]}>
+            <CarouselContent>
+              {futureDates.map((item) => (
+                <CarouselItem
+                  key={item.date}
+                  className="md:basis-1/3 lg:basis-1/4"
+                >
+                  <EventCard item={item} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
-      ) : null}
+      )}
     </>
+  );
+}
+
+function EventCard({ item }: { item: DateResponse }) {
+  const date = new Date(item.date);
+  const formattedDate = format(date, "EEEE, do MMM");
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{formattedDate}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {item.location && <p className="text-sm">📍 {item.location}</p>}
+          <p className="text-sm">🎵 Rehearsal: {item.rehearsalTime}</p>
+          <p className="text-sm">
+            🔔{" "}
+            {item.serviceTime ? `Service: ${item.serviceTime}` : "No Service"}
+          </p>
+          <div className="pt-2">
+            <Badge
+              variant={
+                item.status === "Y"
+                  ? "success"
+                  : item.status === "N"
+                  ? "danger"
+                  : "warning"
+              }
+            >
+              {item.status === "Y"
+                ? "Going"
+                : item.status === "N"
+                ? "Not Going"
+                : "Unsure"}
+            </Badge>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
