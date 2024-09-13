@@ -1,13 +1,13 @@
-import { useEffect, useRef, Suspense } from "react";
+import { useRef, Suspense } from "react";
 import {
   useSearchParams,
   useLoaderData,
   Await,
-  useNavigate,
   useNavigation,
+  Form,
 } from "@remix-run/react";
 import { json, LoaderFunctionArgs, defer } from "@remix-run/cloudflare";
-import { fetchGoogleApiData } from "../utils/googleApi";
+import { fetchGoogleApiData } from "../utils/googleApi.server";
 
 interface DateResponse {
   date: string;
@@ -40,7 +40,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
 export default function Index() {
   const { dates, icalFeedUrl } = useLoaderData<typeof loader>();
-  const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams] = useSearchParams();
   const name = searchParams.get("name");
@@ -49,30 +48,17 @@ export default function Index() {
     navigation.location &&
     new URLSearchParams(navigation.location.search).has("name");
 
-  useEffect(() => {
-    const input = document.getElementById("nameInput") as HTMLInputElement;
-    if (input) {
-      input.value = name || "";
-    }
-  }, [name]);
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const newName = formData.get("name") as string;
-    navigate(`?name=${newName}`, { replace: true });
-  };
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Check Availability</h1>
-      <form onSubmit={handleSubmit} className="mb-4">
+      <Form role="search" className="mb-4">
         <input
           id="nameInput"
           type="text"
           name="name"
           placeholder="Enter surname"
           className="border p-2 mr-2"
+          defaultValue={name || ""}
         />
         <button
           type="submit"
@@ -88,7 +74,7 @@ export default function Index() {
             Subscribe to this calendar
           </a>
         )}
-      </form>
+      </Form>
 
       {searching ? (
         <p>Loading calendar events...</p>
