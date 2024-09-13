@@ -60,9 +60,10 @@ export function generateICalFeed(events: EventData[], name: string) {
     }
 
     const mappedStatus = ((status: string) => {
-      if (status === "Y") return "Going";
-      if (status === "N") return "Not Going";
-      if (status === "M") return "Maybe";
+      const s = status.toUpperCase();
+      if (s === "Y") return "Going";
+      if (s === "N") return "Not Going";
+      if (s === "M") return "Maybe";
       return undefined;
     })(event.status);
 

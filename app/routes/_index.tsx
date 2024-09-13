@@ -162,6 +162,8 @@ function CalendarEvents({
 function EventCard({ item }: { item: DateResponse }) {
   const date = new Date(item.date);
   const formattedDate = format(date, "EEEE, do MMM");
+  const status = item.status.toUpperCase();
+
   return (
     <Card>
       <CardHeader>
@@ -178,16 +180,16 @@ function EventCard({ item }: { item: DateResponse }) {
           <div className="pt-2">
             <Badge
               variant={
-                item.status === "Y"
+                status === "Y"
                   ? "success"
-                  : item.status === "N"
+                  : status === "N"
                   ? "danger"
                   : "warning"
               }
             >
-              {item.status === "Y"
+              {status === "Y"
                 ? "Going"
-                : item.status === "N"
+                : status === "N"
                 ? "Not Going"
                 : "Unsure"}
             </Badge>
