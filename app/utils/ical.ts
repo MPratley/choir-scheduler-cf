@@ -32,7 +32,7 @@ function parseTime(timeString: string, zonedDate: string): Date | null {
 }
 
 export function generateICalFeed(events: EventData[], name: string) {
-  const calendar = ical({ name: `Symbel Choir - ${name}` });
+  const calendar = ical({ name: `Symbel Choir - ${name} DEVELOP` });
 
   events.forEach((event) => {
     const [startTimeStr, endTimeStr] = event.rehearsalTime.split(/\s*[–-]\s*/);
