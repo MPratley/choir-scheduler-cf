@@ -3,10 +3,7 @@ import { generateICalFeed } from "~/utils/ical";
 import { fetchGoogleApiData } from "~/utils/googleApi.server";
 
 // this is a route that returns an ical feed that users can subscribe to
-export async function loader({
-  params,
-  context,
-}: LoaderFunctionArgs) {
+export async function loader({ params, context }: LoaderFunctionArgs) {
   const name = params.name;
 
   if (!name) {

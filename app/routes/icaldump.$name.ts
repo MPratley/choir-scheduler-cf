@@ -3,10 +3,7 @@ import { generateICalFeed } from "~/utils/ical";
 import { fetchGoogleApiData } from "~/utils/googleApi.server";
 
 // this is a route that dumps an ical feed as text for debugging
-export async function loader({
-  params,
-  context,
-}: LoaderFunctionArgs) {
+export async function loader({ params, context }: LoaderFunctionArgs) {
   const name = params.name;
 
   if (!name) {
@@ -21,7 +18,6 @@ export async function loader({
   const headers = new Headers({
     "Content-Type": "text/text; charset=utf-8",
   });
-
 
   return new Response(icalContent, { headers });
 }

@@ -1,5 +1,5 @@
-import ical, { ICalEventData } from 'ical-generator';
-import { parseISO } from 'date-fns/parseISO';
+import ical, { ICalEventData } from "ical-generator";
+import { parseISO } from "date-fns/parseISO";
 
 interface EventData {
   date: string;
@@ -10,7 +10,7 @@ interface EventData {
 }
 
 function parseTime(timeString: string, date: Date): Date | null {
-  if (timeString.toLowerCase() === 'pm tbc') return null;
+  if (timeString.toLowerCase() === "pm tbc") return null;
 
   const match = timeString.match(/(\d{1,2})[:.](\d{2})\s*(pm?)?/i);
   if (!match) return null;
@@ -18,7 +18,7 @@ function parseTime(timeString: string, date: Date): Date | null {
   const [, hours, minutes, period] = match;
   let parsedHours = parseInt(hours);
 
-  if (period && period[0].toLowerCase() === 'p' && parsedHours !== 12) {
+  if (period && period[0].toLowerCase() === "p" && parsedHours !== 12) {
     parsedHours += 12;
   }
 
@@ -45,7 +45,7 @@ export function generateICalFeed(events: EventData[], name: string) {
 
     let endTime: Date | null = null;
 
-    if (event.serviceTime && event.serviceTime !== '-') {
+    if (event.serviceTime && event.serviceTime !== "-") {
       // Use service time + 1 hour for end time
       const serviceTime = parseTime(event.serviceTime, eventDate);
       if (serviceTime) {
@@ -64,19 +64,19 @@ export function generateICalFeed(events: EventData[], name: string) {
     }
 
     const statusMap: { [key: string]: string } = {
-      'Y': 'Going',
-      'N': 'Not Going',
-      'M': 'Maybe',
-      '': '?'
+      Y: "Going",
+      N: "Not Going",
+      M: "Maybe",
+      "": "?",
     };
 
     const eventData: ICalEventData = {
-      timezone: 'Europe/London',
+      timezone: "Europe/London",
       start: startTime,
       end: endTime,
       summary: `Symbel Choir - ${statusMap[event.status]} - 📍 ${event.location}`,
       location: event.location,
-      description: `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || 'N/A'}`,
+      description: `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || "N/A"}`,
     };
 
     calendar.createEvent(eventData);

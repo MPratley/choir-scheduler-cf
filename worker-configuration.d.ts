@@ -2,5 +2,5 @@
 // by running `wrangler types`
 
 interface Env {
-	CHOIR_SCHEDULER_KV: KVNamespace;
+  CHOIR_SCHEDULER_KV: KVNamespace;
 }
