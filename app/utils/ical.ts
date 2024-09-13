@@ -1,6 +1,6 @@
 import ical, { ICalEventData } from "ical-generator";
 import { add } from "date-fns";
-import { fromZonedTime } from "date-fns-tz";
+import { toZonedTime } from "date-fns-tz";
 
 interface EventData {
   date: string;
@@ -10,7 +10,7 @@ interface EventData {
   status: string;
 }
 
-function parseTime(timeString: string, zonedDate: string): Date | null {
+function parseTime(timeString: string, baseDate: string): Date | null {
   if (timeString.toLowerCase().includes("tbc")) return null;
 
   const match = timeString.match(/(\d{1,2})[:.](\d{2})\s*(pm?)?/i);
@@ -25,7 +25,7 @@ function parseTime(timeString: string, zonedDate: string): Date | null {
     parsedHours += 12;
   }
 
-  let result = fromZonedTime(zonedDate, "Europe/London");
+  let result = toZonedTime(baseDate, "Europe/London");
   result = add(result, { hours: parsedHours, minutes: parseInt(minutes) });
 
   return result;
@@ -77,6 +77,9 @@ export function generateICalFeed(events: EventData[], name: string) {
       location: event.location,
       description: descriptionString,
     };
+
+    console.log( "----------" + startTime );
+    console.log({ eventData, event });
 
     calendar.createEvent(eventData);
   });
