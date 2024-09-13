@@ -191,7 +191,9 @@ function EventCard({ item }: { item: DateResponse }) {
                 ? "Going"
                 : status === "N"
                 ? "Not Going"
-                : "Unsure"}
+                : status === "M"
+                ? "Maybe"
+                : "RSVP"}
             </Badge>
           </div>
         </div>

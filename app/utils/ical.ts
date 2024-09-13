@@ -64,11 +64,11 @@ export function generateICalFeed(events: EventData[], name: string) {
       if (s === "Y") return "Going";
       if (s === "N") return "Not Going";
       if (s === "M") return "Maybe";
-      return undefined;
+      else return 'RSVP'
     })(event.status);
 
     const summaryString = `Symbel Choir${mappedStatus ? " (" + mappedStatus + ")" : ""} - 📍 ${event.location}`;
-    const descriptionString = `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || "N/A"}\nStatus: ${mappedStatus ? mappedStatus : "You've not RSVPed yet"}`;
+    const descriptionString = `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || "N/A"}\nStatus: ${mappedStatus !== 'RSVP' ? mappedStatus : "You've not RSVPed yet"}`;
 
     const busyStatus = mappedStatus === "Going" ? ICalEventBusyStatus.BUSY : ICalEventBusyStatus.FREE;
 
