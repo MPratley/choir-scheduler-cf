@@ -71,21 +71,21 @@ export default function Index() {
           id="nameInput"
           type="text"
           name="name"
-          placeholder="Enter name"
+          placeholder="Enter surname"
           className="border p-2 mr-2"
         />
         <button
           type="submit"
           className="bg-blue-500 text-white p-2 rounded mr-2"
         >
-          Check
+          Search
         </button>
         {icalFeedUrl && (
           <a
             href={icalFeedUrl}
             className="bg-green-500 text-white p-2 rounded inline-block"
           >
-            Subscribe to iCal Feed
+            Subscribe to this calendar
           </a>
         )}
       </form>
@@ -127,7 +127,7 @@ function CalendarEvents({
   };
 
   if (resolvedDates && futureDates.length === 0) {
-    return <p className="mt-4">No future dates available for this person.</p>;
+    return <p className="mt-4">No data available for this surname.</p>;
   }
 
   return (
@@ -135,7 +135,7 @@ function CalendarEvents({
       {futureDates.length > 0 ? (
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">
-            Available Future Dates:
+            Availability:
           </h2>
           <div
             ref={carouselRef}
