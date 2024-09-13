@@ -23,13 +23,13 @@ export async function fetchGoogleApiData(
   const response = await fetch(apiUrl);
   const data = await response.json();
 
-  // Store in cache
-  // no need to await this
-  context.cloudflare.env.CHOIR_SCHEDULER_KV.put(cacheKey, JSON.stringify(data), {
-    expirationTtl: CACHE_TTL,
-  }).catch((error) => {
-    console.error("Error storing data in cache:", error);
-  });
+  await context.cloudflare.env.CHOIR_SCHEDULER_KV.put(
+    cacheKey,
+    JSON.stringify(data),
+    {
+      expirationTtl: CACHE_TTL,
+    }
+  );
 
   return data;
 }
