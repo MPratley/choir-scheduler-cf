@@ -67,7 +67,7 @@ export function generateICalFeed(events: EventData[], name: string) {
       return undefined;
     })(event.status);
 
-    const summaryString = `Symbel Choir${mappedStatus ? " - " + mappedStatus : ""} - 📍 ${event.location}`;
+    const summaryString = `Symbel Choir${mappedStatus ? " (" + mappedStatus + ")" : ""} - 📍 ${event.location}`;
     const descriptionString = `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || "N/A"}\nStatus: ${mappedStatus ? mappedStatus : "You've not RSVPed yet"}`;
 
     const busyStatus = mappedStatus === "Going" ? ICalEventBusyStatus.BUSY : ICalEventBusyStatus.FREE;
