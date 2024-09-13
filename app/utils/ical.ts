@@ -1,5 +1,6 @@
 import ical, { ICalEventData } from "ical-generator";
-import { parseISO } from "date-fns/parseISO";
+import { add } from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
 
 interface EventData {
   date: string;
@@ -9,8 +10,8 @@ interface EventData {
   status: string;
 }
 
-function parseTime(timeString: string, date: Date): Date | null {
-  if (timeString.toLowerCase() === "pm tbc") return null;
+function parseTime(timeString: string, zonedDate: string): Date | null {
+  if (timeString.toLowerCase().includes("tbc")) return null;
 
   const match = timeString.match(/(\d{1,2})[:.](\d{2})\s*(pm?)?/i);
   if (!match) return null;
@@ -18,16 +19,14 @@ function parseTime(timeString: string, date: Date): Date | null {
   const [, hours, minutes, period] = match;
   let parsedHours = parseInt(hours);
 
-  if (period && period[0].toLowerCase() === "p" && parsedHours !== 12) {
+  console.log({ period, parsedHours });
+
+  if (!(period && period[0].toLowerCase() === "a") || (!period && parsedHours < 9)) {
     parsedHours += 12;
   }
 
-  const result = new Date(date);
-  result.setHours(parsedHours, parseInt(minutes), 0, 0);
-
-  // if (date.toISOString() === TEMP_TEST_DATE_STR) {
-  //   console.dir({ timeString, date, result, parsedHours, hours, minutes, period }, { depth: null });
-  // }
+  let result = fromZonedTime(zonedDate, "Europe/London");
+  result = add(result, { hours: parsedHours, minutes: parseInt(minutes) });
 
   return result;
 }
@@ -38,10 +37,8 @@ export function generateICalFeed(events: EventData[], name: string) {
   events.forEach((event) => {
     const [startTimeStr, endTimeStr] = event.rehearsalTime.split(/\s*[–-]\s*/);
 
-    const eventDate = parseISO(event.date);
-    const startTime = parseTime(startTimeStr, eventDate);
-
-    if (!startTime) return; // Skip events with unparseable start times
+    const eventDate = event.date; //formatInTimeZone(event.date, "Europe/London", "yyyy-MM-dd");
+    const startTime = parseTime(startTimeStr, eventDate) || add(new Date(eventDate), { hours: 12 });
 
     let endTime: Date | null = null;
 
@@ -49,8 +46,7 @@ export function generateICalFeed(events: EventData[], name: string) {
       // Use service time + 1 hour for end time
       const serviceTime = parseTime(event.serviceTime, eventDate);
       if (serviceTime) {
-        endTime = new Date(serviceTime);
-        endTime.setHours(endTime.getHours() + 1);
+        endTime = add(new Date(serviceTime), { hours: 1 });
       }
     } else if (endTimeStr) {
       // Use end time from rehearsal time string
@@ -60,23 +56,26 @@ export function generateICalFeed(events: EventData[], name: string) {
     if (!endTime) {
       // Default to 2 hours after start time
       endTime = new Date(startTime);
-      endTime.setHours(endTime.getHours() + 2);
+      endTime = add(endTime, { hours: 2 });
     }
 
-    const statusMap: { [key: string]: string } = {
-      Y: "Going",
-      N: "Not Going",
-      M: "Maybe",
-      "": "?",
-    };
+    const mappedStatus = ((status: string) => {
+      if (status === "Y") return "Going";
+      if (status === "N") return "Not Going";
+      if (status === "M") return "Maybe";
+      return undefined;
+    })(event.status);
+
+    const summaryString = `Symbel Choir${mappedStatus ? " - " + mappedStatus : ""} - 📍 ${event.location}`;
+    const descriptionString = `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || "N/A"}\nStatus: ${mappedStatus ? mappedStatus : "You've not RSVPed yet"}`;
 
     const eventData: ICalEventData = {
       timezone: "Europe/London",
       start: startTime,
       end: endTime,
-      summary: `Symbel Choir - ${statusMap[event.status]} - 📍 ${event.location}`,
+      summary: summaryString,
       location: event.location,
-      description: `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || "N/A"}`,
+      description: descriptionString,
     };
 
     calendar.createEvent(eventData);
