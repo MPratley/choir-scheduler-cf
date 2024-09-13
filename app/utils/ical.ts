@@ -1,4 +1,4 @@
-import ical, { ICalEventData } from "ical-generator";
+import ical, { ICalEventBusyStatus, ICalEventData } from "ical-generator";
 import { add } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 
@@ -70,6 +70,8 @@ export function generateICalFeed(events: EventData[], name: string) {
     const summaryString = `Symbel Choir${mappedStatus ? " - " + mappedStatus : ""} - 📍 ${event.location}`;
     const descriptionString = `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || "N/A"}\nStatus: ${mappedStatus ? mappedStatus : "You've not RSVPed yet"}`;
 
+    const busyStatus = mappedStatus === "Going" ? ICalEventBusyStatus.BUSY : ICalEventBusyStatus.FREE;
+
     const eventData: ICalEventData = {
       timezone: "Europe/London",
       start: startTime,
@@ -77,6 +79,7 @@ export function generateICalFeed(events: EventData[], name: string) {
       summary: summaryString,
       location: event.location,
       description: descriptionString,
+      busystatus: busyStatus,
     };
 
     console.log( "----------" + startTime );
