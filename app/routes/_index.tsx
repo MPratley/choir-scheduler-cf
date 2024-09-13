@@ -120,9 +120,7 @@ function CalendarEvents({
     <>
       {futureDates.length > 0 ? (
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">
-            Availability:
-          </h2>
+          <h2 className="text-xl font-semibold mb-4">Availability:</h2>
           <div
             ref={carouselRef}
             className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide"
@@ -151,15 +149,15 @@ function CalendarEvents({
                       item.status === "Y"
                         ? "text-green-500"
                         : item.status === "N"
-                        ? "text-red-500"
-                        : "text-yellow-500"
+                          ? "text-red-500"
+                          : "text-yellow-500"
                     }`}
                   >
                     {item.status === "Y"
                       ? "Going"
                       : item.status === "N"
-                      ? "Not Going"
-                      : "Unsure"}
+                        ? "Not Going"
+                        : "Unsure"}
                   </span>
                 </p>
               </div>
