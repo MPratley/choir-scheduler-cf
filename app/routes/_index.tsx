@@ -10,14 +10,8 @@ import { fetchGoogleApiData } from "../utils/googleApi.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "~/components/ui/carousel";
 import { Badge } from "~/components/ui/badge";
 import { format } from "date-fns";
-import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -152,18 +146,13 @@ function CalendarEvents({
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Carousel opts={{}} plugins={[WheelGesturesPlugin()]}>
-            <CarouselContent>
-              {futureDates.map((item) => (
-                <CarouselItem
-                  key={item.date}
-                  className="md:basis-1/3 lg:basis-1/4"
-                >
-                  <EventCard item={item} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+          <div className="flex flex-col items-center space-y-4 mt-4">
+            {futureDates.map((item) => (
+              <div key={item.date} className="w-full max-w-md">
+                <EventCard item={item} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </>
