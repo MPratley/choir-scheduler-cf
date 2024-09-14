@@ -1,6 +1,6 @@
 import { AppLoadContext } from "@remix-run/cloudflare";
 
-const CACHE_TTL = 30 * 60; // 30 minutes in seconds
+const CACHE_TTL = 120 * 60; // 120 minutes in seconds
 
 export async function fetchGoogleApiData(
   context: AppLoadContext,
