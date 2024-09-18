@@ -42,10 +42,9 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   let icalFeedUrl = null;
   let googleCalendarUrl = null;
   if (name) {
-    const baseUrl = `https://${url.host}`;
     icalFeedUrl = `webcal://${url.host}/icalfeed/${encodeURIComponent(name)}`;
     googleCalendarUrl = `https://www.google.com/calendar/render?cid=${encodeURIComponent(
-      `${baseUrl}/icalfeed/${encodeURIComponent(name)}`
+      `http://${url.host}/icalfeed/${encodeURIComponent(name)}`
     )}`;
   }
 
