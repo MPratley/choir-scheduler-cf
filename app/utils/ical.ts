@@ -37,7 +37,7 @@ export function generateICalFeed(events: EventData[], name: string) {
   events.forEach((event) => {
 
     if (Number.isNaN(Date.parse(event.date))) return;
-    if (event.rehearsalTime.match(/[- ]/i)) return;
+    if (!event.rehearsalTime || event.rehearsalTime.match(/$[- ]/i)) return;
     
     const [startTimeStr, endTimeStr] = event.rehearsalTime.split(/\s*[–-]\s*/);
 
