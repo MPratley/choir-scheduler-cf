@@ -152,11 +152,11 @@ function CalendarEvents({
                   <AlertDialogCancel>
                     Ah, I&apos;ve already done this
                   </AlertDialogCancel>
-                  <AlertDialogAction>
-                    <a href={icalFeedUrl}>Add to Apple Calendar 📆</a>
+                  <AlertDialogAction asChild>
+                    <a href={icalFeedUrl} target="_blank" rel="noreferrer">Add to Apple Calendar 📆</a>
                   </AlertDialogAction>
-                  <AlertDialogAction>
-                    <a href={googleCalendarUrl}>Add to Google Calendar 📆</a>
+                  <AlertDialogAction asChild>
+                    <a href={googleCalendarUrl} target="_blank" rel="noreferrer">Add to Google Calendar 📆</a>
                   </AlertDialogAction>
                   </div>
                 </AlertDialogFooter>
