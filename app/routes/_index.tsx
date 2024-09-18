@@ -23,6 +23,7 @@ import {
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
 import { formatInTimeZone } from "date-fns-tz";
+import { subDays } from "date-fns";
 
 interface DateResponse {
   date: string;
@@ -39,22 +40,27 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   console.log("searching name: ", name);
 
   let icalFeedUrl = null;
+  let googleCalendarUrl = null;
   if (name) {
-    const baseUrl = `webcal://${url.host}`;
-    icalFeedUrl = `${baseUrl}/icalfeed/${encodeURIComponent(name)}`;
+    const baseUrl = `https://${url.host}`;
+    icalFeedUrl = `webcal://${url.host}/icalfeed/${encodeURIComponent(name)}`;
+    googleCalendarUrl = `https://www.google.com/calendar/render?cid=${encodeURIComponent(
+      `${baseUrl}/icalfeed/${encodeURIComponent(name)}`
+    )}`;
   }
 
   if (!name) {
-    return json({ dates: null, name: null, icalFeedUrl });
+    return json({ dates: null, name: null, icalFeedUrl, googleCalendarUrl });
   }
 
   const datesPromise = fetchGoogleApiData(context, name);
 
-  return defer({ dates: datesPromise, name, icalFeedUrl });
+  return defer({ dates: datesPromise, name, icalFeedUrl, googleCalendarUrl });
 }
 
 export default function Index() {
-  const { dates, icalFeedUrl } = useLoaderData<typeof loader>();
+  const { dates, icalFeedUrl, googleCalendarUrl } =
+    useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const [searchParams] = useSearchParams();
   const name = searchParams.get("name");
@@ -91,6 +97,7 @@ export default function Index() {
             <CalendarEvents
               resolvedDates={resolvedDates}
               icalFeedUrl={icalFeedUrl}
+              googleCalendarUrl={googleCalendarUrl}
             />
           )}
         </Await>
@@ -102,12 +109,14 @@ export default function Index() {
 function CalendarEvents({
   resolvedDates,
   icalFeedUrl,
+  googleCalendarUrl,
 }: {
   resolvedDates: DateResponse[] | null;
   icalFeedUrl: string | null;
+  googleCalendarUrl: string | null;
 }) {
   const futureDates =
-    resolvedDates?.filter((item) => new Date(item.date) > new Date()) || [];
+    resolvedDates?.filter((item) => new Date(item.date) >= subDays(new Date(), 1)) || [];
 
   if (resolvedDates && futureDates.length === 0) {
     return <p className="mt-4">No data available for this surname.</p>;
@@ -118,10 +127,12 @@ function CalendarEvents({
       {futureDates.length > 0 && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-2">Availability:</h2>
-          {icalFeedUrl && (
+          {icalFeedUrl && googleCalendarUrl ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" className="mb-4">Add to your calendar app 📆</Button>
+                <Button variant="outline" className="mb-4">
+                  Add to your calendar app 📆
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -130,22 +141,28 @@ function CalendarEvents({
                   </AlertDialogTitle>
                   <AlertDialogDescription>
                     This will add your choir sign-ups to the calendar app on
-                    your phone or laptop. <br /><br /> It&apos;ll update itself each time
-                    changes are made by you or Anthony on the google sheet, so
-                    you only need to do this once!
+                    your phone or laptop. <br />
+                    <br /> It&apos;ll update itself each time changes are made
+                    by you or Anthony on the google sheet, so you only need to
+                    do this once!
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
+                  <div className="flex flex-col flex-grow space-y-4 mt-4">
                   <AlertDialogCancel>
                     Ah, I&apos;ve already done this
                   </AlertDialogCancel>
                   <AlertDialogAction>
-                    <a href={icalFeedUrl}>Sounds good! 📆</a>
+                    <a href={icalFeedUrl}>Add to Apple Calendar 📆</a>
                   </AlertDialogAction>
+                  <AlertDialogAction>
+                    <a href={googleCalendarUrl}>Add to Google Calendar 📆</a>
+                  </AlertDialogAction>
+                  </div>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          )}
+          ) : null}
           <div className="flex flex-col items-center space-y-4 mt-4">
             {futureDates.map((item) => (
               <div key={item.date} className="w-full max-w-md">
