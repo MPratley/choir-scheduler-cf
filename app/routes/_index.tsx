@@ -6,7 +6,7 @@ import {
   Form,
 } from "@remix-run/react";
 import { json, LoaderFunctionArgs, defer } from "@remix-run/cloudflare";
-import { fetchGoogleApiData } from "../utils/googleApi.server";
+import { fetchData, getEventsForPerson } from "../utils/googleApi.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -52,9 +52,16 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     return json({ dates: null, name: null, icalFeedUrl, googleCalendarUrl });
   }
 
-  const datesPromise = fetchGoogleApiData(context, name);
+  const datesPromise = fetchData(context).then((data) =>
+    getEventsForPerson(data, name)
+  );
 
-  return defer({ dates: datesPromise, name, icalFeedUrl, googleCalendarUrl });
+  return defer({
+    dates: datesPromise,
+    name,
+    icalFeedUrl,
+    googleCalendarUrl,
+  });
 }
 
 export default function Index() {
