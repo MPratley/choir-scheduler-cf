@@ -60,10 +60,8 @@ export function getEventsForPerson(
     (row) => row[2].toLowerCase() === person.toLowerCase()
   );
 
-  console.log({ nameRowIndex });
-
   if (nameRowIndex === -1) {
-    throw new Error(`Person not found: ${person}`);
+    throw new Error(`Surname not found: ${person}`);
   }
 
   const dates = data[0];

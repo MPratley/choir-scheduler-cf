@@ -4,8 +4,9 @@ import {
   Await,
   useNavigation,
   Form,
+  useAsyncError,
 } from "@remix-run/react";
-import { json, LoaderFunctionArgs, defer } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { fetchData, getEventsForPerson } from "../utils/googleApi.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -33,7 +34,7 @@ interface DateResponse {
   status: string;
 }
 
-export async function loader({ request, context }: LoaderFunctionArgs) {
+export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const name = url.searchParams.get("name");
 
@@ -49,19 +50,19 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   }
 
   if (!name) {
-    return json({ dates: null, name: null, icalFeedUrl, googleCalendarUrl });
+    return { dates: null, name: null, icalFeedUrl, googleCalendarUrl };
   }
 
-  const datesPromise = fetchData(context).then((data) =>
+  const dates = fetchData(context).then((data) =>
     getEventsForPerson(data, name)
   );
 
-  return defer({
-    dates: datesPromise,
+  return {
+    dates,
     name,
     icalFeedUrl,
     googleCalendarUrl,
-  });
+  };
 }
 
 export default function Index() {
@@ -97,7 +98,7 @@ export default function Index() {
       ) : (
         <Await
           resolve={dates}
-          errorElement={<p>Error loading calendar events. Please try again.</p>}
+          errorElement={<ErrorMessage />}
         >
           {(resolvedDates) => (
             <CalendarEvents
@@ -110,6 +111,11 @@ export default function Index() {
       )}
     </div>
   );
+}
+
+function ErrorMessage() {
+  const error = useAsyncError() as Error;
+  return <p>{error.message}</p>;
 }
 
 function CalendarEvents({
