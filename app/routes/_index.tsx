@@ -75,40 +75,42 @@ export default function Index() {
   const searching =
     navigation.location &&
     new URLSearchParams(navigation.location.search).has("name");
-
+    
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Check Availability</h1>
-      <Form role="search" className="mb-4 flex flex-wrap gap-2">
-        <div className="flex-1 min-w-[200px] flex gap-2">
-          <Input
-            className="max-w-xs"
-            id="nameInput"
-            type="text"
-            name="name"
-            placeholder="Enter surname"
-            defaultValue={name || ""}
-          />
-          <Button type="submit">Search</Button>
-        </div>
-      </Form>
-
-      {searching ? (
-        <p>Loading calendar events...</p>
-      ) : (
-        <Await
-          resolve={dates}
-          errorElement={<ErrorMessage />}
-        >
-          {(resolvedDates) => (
-            <CalendarEvents
-              resolvedDates={resolvedDates}
-              icalFeedUrl={icalFeedUrl}
-              googleCalendarUrl={googleCalendarUrl}
+    <div className="container mx-auto p-4 max-w-2xl">
+      <div className="flex flex-col items-center">
+        <h1 className="text-2xl font-bold mb-4">Check Availability</h1>
+        <Form role="search" className="mb-4 w-full">
+          <div className="flex justify-center gap-2">
+            <Input
+              className="max-w-xs"
+              id="nameInput"
+              type="text"
+              name="name"
+              placeholder="Enter surname"
+              defaultValue={name || ""}
             />
-          )}
-        </Await>
-      )}
+            <Button type="submit">Search</Button>
+          </div>
+        </Form>
+
+        {searching ? (
+          <p>Loading calendar events...</p>
+        ) : (
+          <Await
+            resolve={dates}
+            errorElement={<ErrorMessage />}
+          >
+            {(resolvedDates) => (
+              <CalendarEvents
+                resolvedDates={resolvedDates}
+                icalFeedUrl={icalFeedUrl}
+                googleCalendarUrl={googleCalendarUrl}
+              />
+            )}
+          </Await>
+        )}
+      </div>
     </div>
   );
 }
@@ -135,9 +137,9 @@ function CalendarEvents({
   }
 
   return (
-    <>
+    <div className="w-full">
       {futureDates.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col items-center">
           <h2 className="text-xl font-semibold mb-2">Availability:</h2>
           {icalFeedUrl && googleCalendarUrl ? (
             <AlertDialog>
@@ -175,7 +177,7 @@ function CalendarEvents({
               </AlertDialogContent>
             </AlertDialog>
           ) : null}
-          <div className="flex flex-col items-center space-y-4 mt-4">
+          <div className="flex flex-col items-center w-full space-y-4 mt-4">
             {futureDates.map((item) => (
               <div key={item.date} className="w-full max-w-md">
                 <EventCard item={item} />
@@ -184,7 +186,7 @@ function CalendarEvents({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
