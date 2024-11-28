@@ -1,6 +1,6 @@
 import { AppLoadContext } from "@remix-run/cloudflare";
 
-const CACHE_TTL = 10 * 60; // 10 minutes in seconds
+const CACHE_TTL = 30 * 60; // 30 minutes in seconds
 
 // Data comes back from sheet.getDataRange().getValues()
 // which is an array of arrays.
