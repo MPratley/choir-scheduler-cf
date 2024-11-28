@@ -8,7 +8,7 @@ export async function fetchData(context: AppLoadContext): Promise<{
   sheet_2024: string[][],
   sheet_2025: string[][]
 }> {
-  const cacheKey = `google_api_sheet`;
+  const cacheKey = `google_api_sheet_multi_v1`;
 
   // Try to get data from cache
   const cachedData = await context.cloudflare.env.CHOIR_SCHEDULER_KV.get(
