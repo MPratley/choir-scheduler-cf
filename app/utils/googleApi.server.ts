@@ -4,7 +4,10 @@ const CACHE_TTL = 10 * 60; // 10 minutes in seconds
 
 // Data comes back from sheet.getDataRange().getValues()
 // which is an array of arrays.
-export async function fetchData(context: AppLoadContext): Promise<string[][]> {
+export async function fetchData(context: AppLoadContext): Promise<{
+  sheet_2024: string[][],
+  sheet_2025: string[][]
+}> {
   const cacheKey = `google_api_sheet`;
 
   // Try to get data from cache
@@ -18,7 +21,7 @@ export async function fetchData(context: AppLoadContext): Promise<string[][]> {
   // If not in cache, fetch from API
   const apiUrl = `https://script.google.com/macros/s/${context.cloudflare.env.GOOGLE_API_SCRIPT_ID}/exec?everything=true`;
   const response = await fetch(apiUrl);
-  const data = (await response.json()) as string[][];
+  const data = await response.json() as { sheet_2024: string[][], sheet_2025: string[][] };
 
   await context.cloudflare.env.CHOIR_SCHEDULER_KV.put(
     cacheKey,
@@ -33,10 +36,10 @@ export async function fetchData(context: AppLoadContext): Promise<string[][]> {
 
 export type PersonalEvent = {
   eventIdx: number;
-  location: string;
+  location?: string;
   date: string;
-  rehearsalTime: string;
-  serviceTime: string;
+  rehearsalTime?: string;
+  serviceTime?: string;
   status: "Y" | "N" | "M" | "";
 };
 
@@ -55,6 +58,8 @@ export function getEventsForPerson(
   data: string[][],
   person: string
 ): PersonalEvent[] {
+  console.log(data);
+
   // Find the row index for the given name
   const nameRowIndex = data.findIndex(
     (row) => row[2].toLowerCase() === person.toLowerCase()

@@ -28,10 +28,10 @@ import { subDays } from "date-fns";
 
 interface DateResponse {
   date: string;
-  rehearsalTime: string;
-  serviceTime: string;
-  location: string;
-  status: string;
+  rehearsalTime?: string;
+  serviceTime?: string;
+  location?: string;
+  status?: string;
 }
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
@@ -54,7 +54,10 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   }
 
   const dates = fetchData(context).then((data) =>
-    getEventsForPerson(data, name)
+    [
+      ...getEventsForPerson(data.sheet_2024, name),
+      ...getEventsForPerson(data.sheet_2025, name),
+    ]
   );
 
   return {
@@ -193,7 +196,7 @@ function CalendarEvents({
 function EventCard({ item }: { item: DateResponse }) {
   const date = new Date(item.date);
   const formattedDate = formatInTimeZone(date, "Europe/London", "EEEE, do MMM");
-  const status = item.status.toUpperCase();
+  const status = item.status?.toUpperCase() || "RSVP";
 
   return (
     <Card>
@@ -202,8 +205,8 @@ function EventCard({ item }: { item: DateResponse }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {item.location && <p className="text-sm">📍 {item.location}</p>}
-          <p className="text-sm">🎵 Rehearsal: {item.rehearsalTime}</p>
+          <p className="text-sm">📍 {item.location || "TBC"}</p>
+          <p className="text-sm">🎵 Rehearsal: {item.rehearsalTime || "TBC"}</p>
           <p className="text-sm">
             🔔{" "}
             {item.serviceTime ? `Service: ${item.serviceTime}` : "No Service"}
