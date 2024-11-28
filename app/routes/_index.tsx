@@ -4,9 +4,10 @@ import {
   Await,
   useNavigation,
   Form,
+  useAsyncError,
 } from "@remix-run/react";
-import { json, LoaderFunctionArgs, defer } from "@remix-run/cloudflare";
-import { fetchGoogleApiData } from "../utils/googleApi.server";
+import { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { fetchData, getEventsForPerson } from "../utils/googleApi.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -27,13 +28,13 @@ import { subDays } from "date-fns";
 
 interface DateResponse {
   date: string;
-  rehearsalTime: string;
-  serviceTime: string;
-  location: string;
-  status: string;
+  rehearsalTime?: string;
+  serviceTime?: string;
+  location?: string;
+  status?: string;
 }
 
-export async function loader({ request, context }: LoaderFunctionArgs) {
+export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const name = url.searchParams.get("name");
 
@@ -49,12 +50,22 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   }
 
   if (!name) {
-    return json({ dates: null, name: null, icalFeedUrl, googleCalendarUrl });
+    return { dates: null, name: null, icalFeedUrl, googleCalendarUrl };
   }
 
-  const datesPromise = fetchGoogleApiData(context, name);
+  const dates = fetchData(context).then((data) =>
+    [
+      ...getEventsForPerson(data.sheet_2024, name),
+      ...getEventsForPerson(data.sheet_2025, name),
+    ]
+  );
 
-  return defer({ dates: datesPromise, name, icalFeedUrl, googleCalendarUrl });
+  return {
+    dates,
+    name,
+    icalFeedUrl,
+    googleCalendarUrl,
+  };
 }
 
 export default function Index() {
@@ -67,42 +78,49 @@ export default function Index() {
   const searching =
     navigation.location &&
     new URLSearchParams(navigation.location.search).has("name");
-
+    
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Check Availability</h1>
-      <Form role="search" className="mb-4 flex flex-wrap gap-2">
-        <div className="flex-1 min-w-[200px] flex gap-2">
-          <Input
-            className="max-w-xs"
-            id="nameInput"
-            type="text"
-            name="name"
-            placeholder="Enter surname"
-            defaultValue={name || ""}
-          />
-          <Button type="submit">Search</Button>
-        </div>
-      </Form>
-
-      {searching ? (
-        <p>Loading calendar events...</p>
-      ) : (
-        <Await
-          resolve={dates}
-          errorElement={<p>Error loading calendar events. Please try again.</p>}
-        >
-          {(resolvedDates) => (
-            <CalendarEvents
-              resolvedDates={resolvedDates}
-              icalFeedUrl={icalFeedUrl}
-              googleCalendarUrl={googleCalendarUrl}
+    <div className="container mx-auto p-4 max-w-2xl">
+      <div className="flex flex-col items-center">
+        <h1 className="text-2xl font-bold mb-4">Check Availability</h1>
+        <Form role="search" className="mb-4 w-full">
+          <div className="flex justify-center gap-2">
+            <Input
+              className="max-w-xs"
+              id="nameInput"
+              type="text"
+              name="name"
+              placeholder="Enter surname"
+              defaultValue={name || ""}
             />
-          )}
-        </Await>
-      )}
+            <Button type="submit">Search</Button>
+          </div>
+        </Form>
+
+        {searching ? (
+          <p>Loading calendar events...</p>
+        ) : (
+          <Await
+            resolve={dates}
+            errorElement={<ErrorMessage />}
+          >
+            {(resolvedDates) => (
+              <CalendarEvents
+                resolvedDates={resolvedDates}
+                icalFeedUrl={icalFeedUrl}
+                googleCalendarUrl={googleCalendarUrl}
+              />
+            )}
+          </Await>
+        )}
+      </div>
     </div>
   );
+}
+
+function ErrorMessage() {
+  const error = useAsyncError() as Error;
+  return <p>{error.message}</p>;
 }
 
 function CalendarEvents({
@@ -122,9 +140,9 @@ function CalendarEvents({
   }
 
   return (
-    <>
+    <div className="w-full">
       {futureDates.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col items-center">
           <h2 className="text-xl font-semibold mb-2">Availability:</h2>
           {icalFeedUrl && googleCalendarUrl ? (
             <AlertDialog>
@@ -162,7 +180,7 @@ function CalendarEvents({
               </AlertDialogContent>
             </AlertDialog>
           ) : null}
-          <div className="flex flex-col items-center space-y-4 mt-4">
+          <div className="flex flex-col items-center w-full space-y-4 mt-4">
             {futureDates.map((item) => (
               <div key={item.date} className="w-full max-w-md">
                 <EventCard item={item} />
@@ -171,14 +189,14 @@ function CalendarEvents({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
 function EventCard({ item }: { item: DateResponse }) {
   const date = new Date(item.date);
   const formattedDate = formatInTimeZone(date, "Europe/London", "EEEE, do MMM");
-  const status = item.status.toUpperCase();
+  const status = item.status?.toUpperCase() || "RSVP";
 
   return (
     <Card>
@@ -187,8 +205,8 @@ function EventCard({ item }: { item: DateResponse }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {item.location && <p className="text-sm">📍 {item.location}</p>}
-          <p className="text-sm">🎵 Rehearsal: {item.rehearsalTime}</p>
+          <p className="text-sm">📍 {item.location || "TBC"}</p>
+          <p className="text-sm">🎵 Rehearsal: {item.rehearsalTime || "TBC"}</p>
           <p className="text-sm">
             🔔{" "}
             {item.serviceTime ? `Service: ${item.serviceTime}` : "No Service"}

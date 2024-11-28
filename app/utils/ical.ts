@@ -1,14 +1,7 @@
 import ical, { ICalEventBusyStatus, ICalEventData } from "ical-generator";
 import { add } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-
-interface EventData {
-  date: string;
-  rehearsalTime: string;
-  serviceTime: string;
-  location: string;
-  status: string;
-}
+import { PersonalEvent } from "./googleApi.server";
 
 function parseTime(timeString: string, baseDate: string): Date | null {
   if (timeString.toLowerCase().includes("tbc")) return null;
@@ -21,7 +14,10 @@ function parseTime(timeString: string, baseDate: string): Date | null {
 
   console.log({ period, parsedHours });
 
-  if (!(period && period[0].toLowerCase() === "a") || (!period && parsedHours < 9)) {
+  if (
+    !(period && period[0].toLowerCase() === "a") ||
+    (!period && parsedHours < 9)
+  ) {
     parsedHours += 12;
   }
 
@@ -31,18 +27,24 @@ function parseTime(timeString: string, baseDate: string): Date | null {
   return result;
 }
 
-export function generateICalFeed(events: EventData[], name: string) {
+export function generateICalFeed(events: PersonalEvent[], name: string) {
   const calendar = ical({ name: `Symbel Choir - ${name}` });
 
   events.forEach((event) => {
-
     if (Number.isNaN(Date.parse(event.date))) return;
-    if (!event.rehearsalTime || event.rehearsalTime.match(/$[- ]/i)) return;
-    
+    if (
+      !event.rehearsalTime ||
+      !event.rehearsalTime.trim() ||
+      event.rehearsalTime.match(/$[- ]/i)
+    )
+      return;
+
     const [startTimeStr, endTimeStr] = event.rehearsalTime.split(/\s*[–-]\s*/);
 
     const eventDate = event.date; //formatInTimeZone(event.date, "Europe/London", "yyyy-MM-dd");
-    const startTime = parseTime(startTimeStr, eventDate) || add(new Date(eventDate), { hours: 12 });
+    const startTime =
+      parseTime(startTimeStr, eventDate) ||
+      add(new Date(eventDate), { hours: 12 });
 
     let endTime: Date | null = null;
 
@@ -68,13 +70,22 @@ export function generateICalFeed(events: EventData[], name: string) {
       if (s === "Y") return "Going";
       if (s === "N") return "Not Going";
       if (s === "M") return "Maybe";
-      else return 'RSVP'
+      else return "RSVP";
     })(event.status);
 
-    const summaryString = `Symbel Choir${mappedStatus ? " (" + mappedStatus + ")" : ""} - 📍 ${event.location}`;
-    const descriptionString = `Rehearsal: ${event.rehearsalTime}\nService: ${event.serviceTime || "N/A"}\nStatus: ${mappedStatus !== 'RSVP' ? mappedStatus : "You've not RSVPed yet"}`;
+    const summaryString = `Symbel Choir${
+      mappedStatus ? " (" + mappedStatus + ")" : ""
+    } - 📍 ${event.location}`;
+    const descriptionString = `Rehearsal: ${event.rehearsalTime}\nService: ${
+      event.serviceTime || "N/A"
+    }\nStatus: ${
+      mappedStatus !== "RSVP" ? mappedStatus : "You've not RSVPed yet"
+    }`;
 
-    const busyStatus = mappedStatus === "Going" ? ICalEventBusyStatus.BUSY : ICalEventBusyStatus.FREE;
+    const busyStatus =
+      mappedStatus === "Going"
+        ? ICalEventBusyStatus.BUSY
+        : ICalEventBusyStatus.FREE;
 
     const eventData: ICalEventData = {
       timezone: "Europe/London",
@@ -86,7 +97,7 @@ export function generateICalFeed(events: EventData[], name: string) {
       busystatus: busyStatus,
     };
 
-    console.log( "----------" + startTime );
+    console.log("----------" + startTime);
     console.log({ eventData, event });
 
     calendar.createEvent(eventData);
