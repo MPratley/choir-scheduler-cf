@@ -6,7 +6,7 @@ import { PersonalEvent } from "./googleApi.server";
 function parseTime(timeString: string, baseDate: string): Date | null {
   if (timeString.toLowerCase().includes("tbc")) return null;
 
-  const match = timeString.match(/(\d{1,2})[:.](\d{2})\s*(pm?)?/i);
+  const match = timeString.match(/(\d{1,2})(?:[:.](\d{2}))?\s*(pm?)?/i);
   if (!match) return null;
 
   const [, hours, minutes, period] = match;
@@ -16,13 +16,13 @@ function parseTime(timeString: string, baseDate: string): Date | null {
 
   if (
     !(period && period[0].toLowerCase() === "a") ||
-    (!period && parsedHours < 9)
+    (!period && parsedHours <= 9)
   ) {
     parsedHours += 12;
   }
 
   let result = toZonedTime(baseDate, "Europe/London");
-  result = add(result, { hours: parsedHours, minutes: parseInt(minutes) });
+  result = add(result, { hours: parsedHours, minutes: parseInt(minutes || "0") });
 
   return result;
 }
