@@ -12,7 +12,7 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
 
   const data = await fetchData(context);
   const events = [
-    ...getEventsForPerson(data.sheet_2024, name),
+    // ...getEventsForPerson(data.sheet_2024, name),
     ...getEventsForPerson(data.sheet_2025, name),
   ];
 

@@ -53,12 +53,10 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     return { dates: null, name: null, icalFeedUrl, googleCalendarUrl };
   }
 
-  const dates = fetchData(context).then((data) =>
-    [
-      ...getEventsForPerson(data.sheet_2024, name),
-      ...getEventsForPerson(data.sheet_2025, name),
-    ]
-  );
+  const dates = fetchData(context).then((data) => [
+    // ...getEventsForPerson(data.sheet_2024, name),
+    ...getEventsForPerson(data.sheet_2025, name),
+  ]);
 
   return {
     dates,
@@ -66,7 +64,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     icalFeedUrl,
     googleCalendarUrl,
   };
-}
+};
 
 export default function Index() {
   const { dates, icalFeedUrl, googleCalendarUrl } =
