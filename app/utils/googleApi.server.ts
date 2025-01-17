@@ -1,4 +1,5 @@
 import { AppLoadContext } from "@remix-run/cloudflare";
+import { isValid } from "date-fns";
 
 const CACHE_TTL = 30 * 60; // 30 minutes in seconds
 
@@ -78,9 +79,14 @@ export function getEventsForPerson(
 
   // Start from col idx 3 to skip the first three columns
   for (let i = event_cols_start_idx; i < dates.length; i++) {
+    const date = dates[i];
+    if (!isValid(new Date(date))) {
+      continue;
+    }
+
     result.push({
       eventIdx: i,
-      date: dates[i],
+      date: date,
       rehearsalTime: rehearsalTime[i],
       serviceTime: serviceTime[i],
       location: location[i],
