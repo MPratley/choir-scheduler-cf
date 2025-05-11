@@ -73,7 +73,7 @@ export function getEventsForPerson(
   const dates = data[0];
   const rehearsalTime = data[2];
   const serviceTime = data[3];
-  const location = data[4];
+  const location = data[5];
   const availability = data[nameRowIndex];
   const result: PersonalEvent[] = [];
 
